@@ -1,0 +1,29 @@
+{
+  "name": "aggregator-helper",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "budo src/index.js:bundle.js --live --open -- -t [ babelify --sourceType module ]",
+    "bundle": "mkdir -p dist && browserify src/index.js -t [ babelify --sourceType module ] | uglifyjs > dist/bundle.js && cp src/index.html dist/",
+    "upload": "surge dist",
+    "test": "jest --verbose --coverage",
+    "test:update": "jest --verbose --coverage --updateSnapshot",
+    "test:watch": "jest --verbose --watch",
+    "coverage": "jest --verbose --coverage && open ./coverage/lcov-report/index.html"
+  },
+  "author": "Tuan Nguyen <vdtn359@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "7.0.0",
+    "@babel/preset-env": "7.0.0",
+    "babel-core": "7.0.0-0",
+    "babel-jest": "23.4.2",
+    "babel-plugin-transform-object-rest-spread": "6.26.0",
+    "babelify": "10.0.0",
+    "budo": "11.3.2",
+    "jest": "23.5.0",
+    "prettier": "1.14.2",
+    "surge": "0.20.1",
+    "uglify-js": "3.4.9"
+  }
+}
