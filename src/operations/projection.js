@@ -1,6 +1,6 @@
 import { recursiveDeepProperty } from './helper';
-import { not } from "../utils/functional";
-import { isNullOrUndefined } from "../utils/object";
+import { not } from '../utils/functional';
+import { isEmpty, isNullOrUndefined } from '../utils/object';
 
 const PROJECTION = {
 	INCLUDE: 1,
@@ -33,12 +33,14 @@ function _internalPathProjection({ pathArray = [], projections, input }) {
 	return recursiveDeepProperty({
 		pathArray,
 		input,
-		mappingFunc({ currentPath, isLeaf }) {
+		mappingFunc({ parentPath, isLeaf, pathArray }) {
 			return (input, parent) => {
 				if (!parent || !(input && typeof input === 'object')) {
 					return input;
 				}
+				let result = input;
 				if (isLeaf) {
+					result = {};
 					let allKeys = Object.keys(input);
 					let includedKeys = allKeys.slice();
 					for (let projectionKey of Object.keys(projections)) {
@@ -49,18 +51,22 @@ function _internalPathProjection({ pathArray = [], projections, input }) {
 							}
 							includedKeys.push(projectionKey);
 						} else {
-							includedKeys = includedKeys.filter(key => key !== projectionKey);
+							includedKeys = includedKeys.filter(
+								key => key !== projectionKey
+							);
 						}
 					}
-					const result = {};
-					includedKeys.forEach(includedKey => result[includedKey] = input[includedKey]);
-					return result;
+					includedKeys.forEach(
+						includedKey =>
+							(result[includedKey] = input[includedKey])
+					);
+				}
+				if (!isEmpty(parentPath) && typeof parentPath !== 'number') {
+					return Object.assign({}, parent, {
+						[parentPath]: result,
+					});
 				} else {
-					if (currentPath !== "" && !isNullOrUndefined(currentPath)) {
-						return Object.assign({}, parent, { [currentPath]: input });
-					} else {
-						return input;
-					}
+					return result;
 				}
 			};
 		},

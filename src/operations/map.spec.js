@@ -10,6 +10,22 @@ const testSuite = [
 		},
 	],
 	[
+		'mapping could work with nested array',
+		{
+			input: [
+				[{ a: 1 }, { a: 2 }],
+				[{ a: 2 }, { a: 4 }],
+				[{ a: 3 }, { a: 7 }],
+			],
+			params: [{ path: '[].[].a', transform: element => element * 2 }],
+			output: [
+				[{ a: 2 }, { a: 4 }],
+				[{ a: 4 }, { a: 8 }],
+				[{ a: 6 }, { a: 14 }],
+			],
+		},
+	],
+	[
 		'mapping could accept an array of transformation',
 		{
 			input: [
@@ -76,7 +92,10 @@ const testSuite = [
 				},
 			],
 			params: [
-				{ path: '[].nested[].number', transform: element => element * 2 },
+				{
+					path: '[].nested[].number',
+					transform: element => element * 2,
+				},
 				{ path: '[].number', transform: element => element * 3 },
 			],
 			output: [
@@ -102,7 +121,7 @@ const testSuite = [
 							test: 2,
 						},
 					],
-					number: 6
+					number: 6,
 				},
 			],
 		},
