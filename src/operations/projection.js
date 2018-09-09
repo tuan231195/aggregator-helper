@@ -33,12 +33,12 @@ function _internalPathProjection({ pathArray = [], projections, input }) {
 	return recursiveDeepProperty({
 		pathArray,
 		input,
-		mappingFunc({ currentPath, isCurrentArray, pathArray }) {
+		mappingFunc({ currentPath, isLeaf }) {
 			return (input, parent) => {
 				if (!parent || !(input && typeof input === 'object')) {
 					return input;
 				}
-				if (!pathArray.length) {
+				if (isLeaf) {
 					let allKeys = Object.keys(input);
 					let includedKeys = allKeys.slice();
 					for (let projectionKey of Object.keys(projections)) {

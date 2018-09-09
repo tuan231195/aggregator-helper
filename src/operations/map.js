@@ -1,4 +1,5 @@
 import { recursiveDeepProperty } from './helper';
+import { isEmpty, isNullOrUndefined } from '../utils/object';
 
 export function map(mappings) {
 	return input => {
@@ -29,16 +30,21 @@ function _internalPathMap({ pathArray = [], mappingFunc, input }) {
 	return recursiveDeepProperty({
 		pathArray,
 		input,
-		mappingFunc({ currentPath, isCurrentArray, isLeaf }) {
+		mappingFunc({ parentPath, isLeaf }) {
 			return (input, parent) => {
-				if (!parent || !currentPath) {
-					return input;
-				}
 				let result = input;
 				if (isLeaf) {
 					result = mappingFunc(input);
 				}
-				return Object.assign({}, parent, { [currentPath]: result });
+				if (isEmpty(parentPath)) {
+					return result;
+				}
+				if (typeof parentPath === 'number') {
+					return result;
+				}
+				return Object.assign({}, parent, {
+					[parentPath]: result,
+				});
 			};
 		},
 	});

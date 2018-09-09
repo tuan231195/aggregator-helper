@@ -1,4 +1,4 @@
-import { isNullOrUndefined } from '../utils/object';
+import { isEmpty, isNullOrUndefined } from '../utils/object';
 
 /**
  * Access deeply nested property for an object
@@ -24,61 +24,86 @@ export function getDeepProperty({ path, object }) {
 /**
  * Perform transformation of input based on mapping function
  * @param {object} params
- * @param {string} params.pathArray: the path array to the property
+ * @param {array} params.pathArray: the path array to the property
  * @param {object} params.input: object to be transformed
  * @param {function} params.mappingFunc: function to be used
  */
-export function recursiveDeepProperty({ pathArray = [], input, mappingFunc }) {
+export function recursiveDeepProperty({
+	pathArray = [],
+	input,
+	parent,
+	parentPath,
+	mappingFunc,
+}) {
 	if (pathArray.length === 0) {
 		return mappingFunc({
 			currentPath: undefined,
-			isCurrentPathArray: false,
+			parentPath,
 			isLeaf: true,
 			pathArray,
-		})(input, input);
-	}
-	let [currentPath] = pathArray;
-	let isCurrentPathArray = currentPath.endsWith('[]');
-	if (isCurrentPathArray) {
-		currentPath = currentPath.substring(0, currentPath.length - 2);
+		})(input, parent);
 	}
 
-	if (isNullOrUndefined(input)) {
+	if (Array.isArray(input)) {
+		let result = input.map((element, index) =>
+			recursiveDeepProperty({
+				pathArray,
+				parentPath: index,
+				parent: input,
+				input: element,
+				mappingFunc,
+			})
+		);
+
 		return mappingFunc({
-			currentPath,
-			isCurrentPathArray: false,
-			isLeaf: true,
+			parentPath,
+			currentPath: [],
+			isLeaf: false,
 			pathArray,
-		})(input, input);
-	}
-	const parent = input;
-	input = currentPath ? input[currentPath] : input;
-	if (!Array.isArray(input)) {
-		isCurrentPathArray = false;
-	}
-
-	const nextPathArray = pathArray.slice(1);
-
-	let result;
-	if (isCurrentPathArray) {
-		result = input
-			.map(element =>
-				recursiveDeepProperty({
-					pathArray: nextPathArray,
-					input: element,
-					mappingFunc,
-				})
-			)
-			.filter(element => !isNullOrUndefined(element));
+		})(result, parent);
 	} else {
-		result = recursiveDeepProperty({
+		let [currentPath] = pathArray;
+		let isCurrentPathArray = currentPath.toString().endsWith('[]');
+		if (isCurrentPathArray) {
+			currentPath = currentPath.substring(0, currentPath.length - 2);
+		}
+
+		if (isNullOrUndefined(input)) {
+			return mappingFunc({
+				currentPath,
+				parentPath,
+				isLeaf: true,
+				pathArray,
+			})(input, parent);
+		}
+
+		let currentParent = input;
+
+		let currentInput = _getPath({
+			parent: currentParent,
+			path: currentPath,
+		});
+
+		let nextPathArray = pathArray.slice(1);
+
+		let result = recursiveDeepProperty({
 			pathArray: nextPathArray,
-			input,
+			input: currentInput,
+			parentPath: currentPath,
+			parent: currentParent,
 			mappingFunc,
 		});
+
+		return mappingFunc({
+			currentPath,
+			parentPath,
+			pathArray,
+			isLeaf: false,
+			isCurrentPathArray,
+		})(result, parent);
 	}
-	return mappingFunc({ currentPath, isCurrentPathArray, isLeaf: pathArray.length === 1, pathArray })(
-		result,
-		parent
-	);
+}
+
+function _getPath({ path, parent }) {
+	return !isEmpty(path) ? parent[path] : parent;
 }
