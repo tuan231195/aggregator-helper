@@ -33,22 +33,32 @@ export function recursiveDeepProperty({
 	input,
 	parent,
 	parentPath,
+	isParentPathArray,
 	mappingFunc,
 }) {
 	if (pathArray.length === 0) {
 		return mappingFunc({
-			currentPath: undefined,
 			parentPath,
 			isLeaf: true,
-			pathArray,
 		})(input, parent);
 	}
 
-	if (Array.isArray(input)) {
-		let result = input.map((element, index) =>
+	let [currentPath] = pathArray;
+	const isCurrentPathArray = currentPath.toString().endsWith('[]');
+	if (isCurrentPathArray) {
+		currentPath = currentPath.substring(0, currentPath.length - 2);
+		if (currentPath === '') {
+			isParentPathArray = true;
+			pathArray = pathArray.slice();
+		}
+	}
+
+	if (Array.isArray(input) && isParentPathArray) {
+		const result = input.map((element, index) =>
 			recursiveDeepProperty({
 				pathArray,
 				parentPath: index,
+				isParentPathArray: true,
 				parent: input,
 				input: element,
 				mappingFunc,
@@ -57,49 +67,44 @@ export function recursiveDeepProperty({
 
 		return mappingFunc({
 			parentPath,
+			isCurrentPathArray: true,
 			currentPath: [],
 			isLeaf: false,
-			pathArray,
 		})(result, parent);
-	} else {
-		let [currentPath] = pathArray;
-		let isCurrentPathArray = currentPath.toString().endsWith('[]');
-		if (isCurrentPathArray) {
-			currentPath = currentPath.substring(0, currentPath.length - 2);
-		}
 
+	} else {
 		if (isNullOrUndefined(input)) {
 			return mappingFunc({
 				currentPath,
+				isCurrentPathArray,
 				parentPath,
 				isLeaf: true,
-				pathArray,
 			})(input, parent);
 		}
 
-		let currentParent = input;
+		const currentParent = input;
 
-		let currentInput = _getPath({
+		const currentInput = _getPath({
 			parent: currentParent,
 			path: currentPath,
 		});
 
-		let nextPathArray = pathArray.slice(1);
+		const nextPathArray = pathArray.slice(1);
 
-		let result = recursiveDeepProperty({
+		const result = recursiveDeepProperty({
 			pathArray: nextPathArray,
 			input: currentInput,
 			parentPath: currentPath,
+			isParentPathArray: isCurrentPathArray,
 			parent: currentParent,
 			mappingFunc,
 		});
 
 		return mappingFunc({
 			currentPath,
-			parentPath,
-			pathArray,
-			isLeaf: false,
 			isCurrentPathArray,
+			parentPath,
+			isLeaf: false,
 		})(result, parent);
 	}
 }

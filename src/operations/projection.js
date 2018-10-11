@@ -33,7 +33,7 @@ function _internalPathProjection({ pathArray = [], projections, input }) {
 	return recursiveDeepProperty({
 		pathArray,
 		input,
-		mappingFunc({ parentPath, isLeaf, pathArray }) {
+		mappingFunc({ parentPath, isLeaf }) {
 			return (input, parent) => {
 				if (!parent || !(input && typeof input === 'object')) {
 					return input;
