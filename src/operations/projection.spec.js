@@ -151,6 +151,133 @@ const testSuite = [
 			],
 		},
 	],
+	[
+		'projection could accept an array of projection specs - case 3',
+		{
+			input: [
+				{
+					number1: 1,
+					number2: 3,
+					numbers: [
+						{
+							a: 4,
+							b: [
+								{
+									x: 1,
+									y: 1,
+								},
+								{
+									x: 2,
+									y: 1,
+								},
+							],
+						},
+						{
+							a: 5,
+							b: [
+								{
+									x: 6,
+									y: 1,
+								},
+							],
+						},
+					],
+				},
+				{
+					number1: 1,
+					number2: 4,
+					numbers: [
+						{
+							a: 6,
+							b: [
+								{
+									x: 3,
+									y: 1,
+								},
+							],
+						},
+						{
+							a: 7,
+							b: [
+								{
+									x: 4,
+									y: 1,
+								},
+								{
+									x: 5,
+									y: 1,
+								},
+							],
+						},
+					],
+				},
+			],
+			params: [
+				{
+					path: '[]',
+					projections: {
+						numbers: 1,
+					},
+				},
+				{
+					path: '[].numbers[]',
+					projections: {
+						b: 1,
+					},
+				},
+				{
+					path: '[].numbers[].b[]',
+					projections: {
+						x: 1,
+					},
+				},
+			],
+			output: [
+				{
+					numbers: [
+						{
+							b: [
+								{
+									x: 1,
+								},
+								{
+									x: 2,
+								},
+							],
+						},
+						{
+							b: [
+								{
+									x: 6,
+								},
+							],
+						},
+					],
+				},
+				{
+					numbers: [
+						{
+							b: [
+								{
+									x: 3,
+								},
+							],
+						},
+						{
+							b: [
+								{
+									x: 4,
+								},
+								{
+									x: 5,
+								},
+							],
+						},
+					],
+				},
+			],
+		},
+	],
 ];
 describe('Testing projection operator', () => {
 	test.each(testSuite)('%s', (testDescription, { params, input, output }) => {

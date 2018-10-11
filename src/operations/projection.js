@@ -1,6 +1,5 @@
 import { recursiveDeepProperty } from './helper';
-import { not } from '../utils/functional';
-import { isEmpty, isNullOrUndefined } from '../utils/object';
+import { isEmpty } from '../utils/object';
 
 const PROJECTION = {
 	INCLUDE: 1,
@@ -40,26 +39,11 @@ function _internalPathProjection({ pathArray = [], projections, input }) {
 				}
 				let result = input;
 				if (isLeaf) {
-					result = {};
-					let allKeys = Object.keys(input);
-					let includedKeys = allKeys.slice();
-					for (let projectionKey of Object.keys(projections)) {
-						if (projections[projectionKey] === 1) {
-							if (allKeys.length === includedKeys.length) {
-								//reset included keys
-								includedKeys = [];
-							}
-							includedKeys.push(projectionKey);
-						} else {
-							includedKeys = includedKeys.filter(
-								key => key !== projectionKey
-							);
-						}
+					if (Array.isArray(result)) {
+						result = result.map(element => filterKeys({ input: element, projections }));
+					} else {
+						result = filterKeys({ input: result, projections });
 					}
-					includedKeys.forEach(
-						includedKey =>
-							(result[includedKey] = input[includedKey])
-					);
 				}
 				if (!isEmpty(parentPath) && typeof parentPath !== 'number') {
 					return Object.assign({}, parent, {
@@ -71,4 +55,28 @@ function _internalPathProjection({ pathArray = [], projections, input }) {
 			};
 		},
 	});
+}
+
+function filterKeys({ input, projections }) {
+	let result = {};
+	let allKeys = Object.keys(input);
+	let includedKeys = allKeys.slice();
+	for (let projectionKey of Object.keys(projections)) {
+		if (projections[projectionKey] === PROJECTION.INCLUDE) {
+			if (allKeys.length === includedKeys.length) {
+				//reset included keys
+				includedKeys = [];
+			}
+			includedKeys.push(projectionKey);
+		} else {
+			includedKeys = includedKeys.filter(
+				key => key !== projectionKey
+			);
+		}
+	}
+	includedKeys.forEach(
+		includedKey =>
+			(result[includedKey] = input[includedKey])
+	);
+	return result;
 }
